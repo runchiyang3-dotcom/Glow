@@ -1,0 +1,37 @@
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    path("", views.home, name="home"),
+    path("community/", views.community, name="community"),
+    path("community/create/", views.community_post_create, name="community_post_create"),
+    path("profile.html", views.static_profile, name="static_profile"),
+    path("<str:filename>", views.legacy_site_file, name="legacy_site_file"),
+    path("assets/<path:asset_path>", views.legacy_asset, name="legacy_asset"),
+    path("login/", views.login_view, name="login"),
+    path("login/google/", views.google_login_start, name="google_login"),
+    path("login/google/callback/", views.google_login_callback, name="google_login_callback"),
+    path("login/google-demo/", views.google_login_demo, name="google_login_demo"),
+    path("logout/", views.logout_view, name="logout"),
+    path("dashboard/", views.dashboard, name="dashboard"),
+    path("dashboard/profile/", views.edit_profile, name="edit_profile"),
+    path("dashboard/payments/enable/", views.enable_payments, name="enable_payments"),
+    path("dashboard/portfolio/new/", views.portfolio_create, name="portfolio_create"),
+    path("dashboard/portfolio/<int:pk>/edit/", views.portfolio_edit, name="portfolio_edit"),
+    path("dashboard/portfolio/<int:pk>/toggle-bookable/", views.toggle_portfolio_booking, name="toggle_portfolio_booking"),
+    path("portfolio/<int:pk>/", views.portfolio_detail, name="portfolio_detail"),
+    path("artists/<int:user_id>/", views.artist_profile, name="artist_profile"),
+    path("posts/<int:pk>/", views.post_detail, name="post_detail"),
+    path("portfolio/<int:pk>/book/", views.request_appointment, name="request_appointment"),
+    path("dashboard/messages/", views.messages_box, name="messages_box"),
+    path("dashboard/messages/thread/<int:pk>/", views.thread_detail, name="thread_detail"),
+    path("artists/<int:user_id>/message/", views.start_private_thread, name="start_private_thread"),
+    path("dashboard/schedule/", views.schedule, name="schedule"),
+    path("dashboard/work-notes/", views.work_notes, name="work_notes"),
+    path("appointments/<int:pk>/accept/", views.accept_appointment, name="accept_appointment"),
+    path("appointments/<int:pk>/cancel/", views.cancel_appointment, name="cancel_appointment"),
+    path("appointments/<int:pk>/pay-deposit/", views.pay_deposit, name="pay_deposit"),
+    path("appointments/<int:pk>/complete/", views.mark_completed, name="mark_completed"),
+    path("appointments/<int:pk>/pay-final/", views.pay_final, name="pay_final"),
+]

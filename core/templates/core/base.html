@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Glow AU{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Nunito+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'core/styles.css' %}?v=20260601b">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="ambient-bg" aria-hidden="true"></div>
+  <div class="makeup-background" aria-hidden="true">
+    <span class="makeup-piece bg-lipstick bg-lipstick-one"></span>
+    <span class="makeup-piece bg-lipstick bg-lipstick-two"></span>
+    <span class="makeup-piece bg-brush bg-brush-one"></span>
+    <span class="makeup-piece bg-brush bg-brush-two"></span>
+    <span class="makeup-piece bg-blush bg-blush-one"></span>
+    <span class="makeup-piece bg-blush bg-blush-two"></span>
+  </div>
+
+  <header class="site-header">
+    <nav class="navbar" aria-label="Primary navigation">
+      <a class="logo" href="{% url 'home' %}" aria-label="Glow AU home">
+        <span class="logo-mark" aria-hidden="true">G</span>
+        <span class="logo-text">Glow AU</span>
+      </a>
+      {% if user.is_authenticated %}
+        <span class="login-role-status">Logged in as {{ active_login_role_label }}</span>
+      {% endif %}
+
+      <div class="nav-links">
+        <a href="{% url 'community' %}">Community</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% endif %}
+      </div>
+
+      <div class="account-pill" aria-label="Account actions">
+        {% if user.is_authenticated %}
+          <a class="community-login message-link" href="{% url 'messages_box' %}">Messages{% if unread_message_count %}<span class="message-badge">{{ unread_message_count }}</span>{% endif %}</a>
+          <a class="community-login" href="{% url 'logout' %}">Log out</a>
+        {% else %}
+          <a class="community-login" href="{% url 'login' %}">Log in</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  {% if messages %}
+    <div class="django-messages" aria-live="polite">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% block content %}{% endblock %}
+
+  <footer class="site-footer">
+    <nav class="navbar footer-navbar" aria-label="Footer navigation">
+      <p class="footer-label">Contact</p>
+      <p class="footer-email">runchiyang3@gmail.com</p>
+    </nav>
+  </footer>
+
+  <script src="{% static 'core/script.js' %}?v=20260601b"></script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

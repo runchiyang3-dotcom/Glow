@@ -1,0 +1,140 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Create Community Post{% endblock %}
+{% block content %}
+<main class="auth-page community-compose-page">
+  <section class="auth-panel community-compose-panel" aria-labelledby="community-post-title">
+    <div class="auth-copy community-compose-copy">
+      <p class="eyebrow">Community</p>
+      <h1 id="community-post-title">Create post</h1>
+      {% if is_artist_post %}
+        <p>Start by choosing whether this post is bookable. Bookable posts ask for location and price; everything else stays clean and simple.</p>
+      {% else %}
+        <p>Client accounts publish community posts without booking controls. Add a strong image, a clear title, and style tags people actually search for.</p>
+      {% endif %}
+      <a class="contact-button" href="{% url 'community' %}">Back to community</a>
+    </div>
+
+    <form class="auth-form community-compose-form" method="post" enctype="multipart/form-data" data-community-post-form>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="community-form-banner error">
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+
+      {% if is_artist_post %}
+        <section class="compose-section">
+          <div class="compose-section-head">
+            <p class="compose-step">Step 1</p>
+            <h2>Should people book this post?</h2>
+          </div>
+          <div class="bookable-toggle" role="radiogroup" aria-label="Bookable selection">
+            <button class="bookable-choice{% if form.is_bookable.value %} is-active{% endif %}" type="button" data-bookable-choice="true" aria-pressed="{% if form.is_bookable.value %}true{% else %}false{% endif %}">
+              <strong>Bookable</strong>
+              <span>Show price and booking location.</span>
+            </button>
+            <button class="bookable-choice{% if not form.is_bookable.value %} is-active{% endif %}" type="button" data-bookable-choice="false" aria-pressed="{% if not form.is_bookable.value %}true{% else %}false{% endif %}">
+              <strong>Community only</strong>
+              <span>Publish the look without booking UI.</span>
+            </button>
+          </div>
+          {{ form.is_bookable }}
+        </section>
+      {% else %}
+        {{ form.is_bookable }}
+      {% endif %}
+
+      <section class="compose-section">
+        <div class="compose-section-head">
+          <p class="compose-step">Step 2</p>
+          <h2>Core post details</h2>
+        </div>
+        <label class="field">
+          <span>Title</span>
+          {{ form.title }}
+          {% for error in form.title.errors %}<small class="error">{{ error }}</small>{% endfor %}
+        </label>
+        <label class="field">
+          <span>Description</span>
+          {{ form.description }}
+          {% for error in form.description.errors %}<small class="error">{{ error }}</small>{% endfor %}
+        </label>
+      </section>
+
+      <section class="compose-section">
+        <div class="compose-section-head">
+          <p class="compose-step">Step 3</p>
+          <h2>Image upload and crop</h2>
+        </div>
+        <div class="image-composer" data-image-composer>
+          <div class="image-dropzone" tabindex="0" role="button" data-image-dropzone aria-label="Upload or paste image">
+            <div class="image-dropzone-copy">
+              <strong>Upload or paste your image</strong>
+              <span>Click to choose a file, drag one in, or paste from clipboard.</span>
+            </div>
+            {{ form.image }}
+          </div>
+          {% for error in form.image.errors %}<small class="error">{{ error }}</small>{% endfor %}
+
+          <div class="crop-workspace" data-crop-workspace hidden>
+            <div class="crop-frame" data-crop-frame>
+              <img alt="Preview crop" data-crop-image>
+            </div>
+            <div class="crop-tools">
+              <label class="field crop-slider-field">
+                <span>Zoom</span>
+                <input type="range" min="1" max="2.6" step="0.01" value="1" data-crop-zoom>
+              </label>
+              <p class="crop-note">Drag the image to frame the final card crop.</p>
+            </div>
+          </div>
+
+          {{ form.crop_left }}
+          {{ form.crop_top }}
+          {{ form.crop_width }}
+          {{ form.crop_height }}
+        </div>
+      </section>
+
+      <section class="compose-section compose-bookable-fields" data-bookable-fields {% if not form.is_bookable.value %}hidden{% endif %}>
+        <div class="compose-section-head">
+          <p class="compose-step">Step 4</p>
+          <h2>Booking setup</h2>
+        </div>
+        <label class="field city-field address-field">
+          <span>Address</span>
+          {{ form.address }}
+          <div class="city-suggestions" id="communityAddressSuggestions" data-autocomplete-list="address" role="listbox" aria-label="Address suggestions"></div>
+          {% for error in form.address.errors %}<small class="error">{{ error }}</small>{% endfor %}
+        </label>
+        <label class="field">
+          <span>Price</span>
+          {{ form.full_price }}
+          {% for error in form.full_price.errors %}<small class="error">{{ error }}</small>{% endfor %}
+        </label>
+      </section>
+
+      <section class="compose-section">
+        <div class="compose-section-head">
+          <p class="compose-step">{% if is_artist_post %}Step 5{% else %}Step 4{% endif %}</p>
+          <h2>Style tags</h2>
+        </div>
+        <div class="tag-composer" data-tag-composer>
+          <label class="field">
+            <span>Style tags</span>
+            <input type="text" placeholder="Type a tag and press Enter" autocomplete="off" data-tag-input>
+          </label>
+          <div class="tag-suggestions" data-tag-suggestions hidden></div>
+          <div class="tag-chip-list" data-tag-list></div>
+          {{ form.style_tags }}
+          {{ form.derived_city }}
+          {% for error in form.style_tags.errors %}<small class="error">{{ error }}</small>{% endfor %}
+        </div>
+      </section>
+
+      <button class="publish-post-button" type="submit">Publish post</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Schedule{% endblock %}
+{% block content %}
+<main class="profile-page">
+  <section class="schedule-section" aria-labelledby="schedule-title">
+    <div class="section-title-row">
+      <div>
+        <p class="eyebrow">Artist schedule</p>
+        <h2 id="schedule-title">Schedule</h2>
+      </div>
+      <a class="contact-button" href="{% url 'work_notes' %}">Work notes</a>
+    </div>
+
+    <div class="schedule-layout">
+      <div class="booking-panel">
+        <h3>Business hours</h3>
+        <p class="booking-note">Enter business start and end time. Pause time is optional.</p>
+        <form class="booking-form" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="availability">
+          {% include "core/form_panel.html" with form=availability_form %}
+          <button class="booking-submit" type="submit">Add availability</button>
+        </form>
+      </div>
+
+      <div class="booking-panel">
+        <h3>Occupied time</h3>
+        <p class="booking-note">Add booked or blocked periods manually.</p>
+        <form class="booking-form" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="occupied">
+          {% include "core/form_panel.html" with form=occupied_form %}
+          <button class="booking-submit" type="submit">Add occupied time</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="comments-panel">
+      <div class="comments-header"><h3>Current schedule</h3></div>
+      <div class="comment-list">
+        {% for window in windows %}
+          <article class="comment-item"><div class="comment-content"><p>{{ window }}</p></div></article>
+        {% empty %}
+          <div class="comment-login-prompt"><p>No availability yet.</p></div>
+        {% endfor %}
+        {% for item in occupied_times %}
+          <article class="comment-item"><div class="comment-content"><p>{{ item.date }} · {{ item.start_time }}-{{ item.end_time }} · {{ item.note }}</p></div></article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Messages{% endblock %}
+{% block content %}
+<main class="message-page">
+  <section class="message-shell message-swiper-shell" aria-labelledby="messages-title">
+    <header class="message-hero">
+      <div>
+        <p class="eyebrow">Inbox</p>
+        <h1 id="messages-title">Messages</h1>
+        <p class="message-lede">Appointment updates, private chats and post comments are collected here.</p>
+      </div>
+      <a class="contact-button" href="{% url 'dashboard' %}">Dashboard</a>
+    </header>
+
+    <nav class="bookable-switch message-tab-bar" aria-label="Message categories">
+      <a class="message-tab{% if active_tab == 'appointments' %} is-active{% endif %}" href="{% url 'messages_box' %}?tab=appointments">Appointment</a>
+      <a class="message-tab{% if active_tab == 'private' %} is-active{% endif %}" href="{% url 'messages_box' %}?tab=private">Private</a>
+      <a class="message-tab{% if active_tab == 'comments' %} is-active{% endif %}" href="{% url 'messages_box' %}?tab=comments">Comments</a>
+    </nav>
+
+    {% if active_tab == "appointments" %}
+      <section class="message-pane is-active">
+        <div class="comments-header">
+          <h3>Appointment info</h3>
+        </div>
+        <div class="message-list">
+          {% for item in appointment_items %}
+            <article class="message-card message-{{ item.category }}">
+              <div class="message-card-top">
+                <span class="message-category">{{ item.get_category_display }}</span>
+                <span class="message-time">{{ item.created_at|date:"M j, Y" }}</span>
+              </div>
+              <h2 class="message-title">{{ item.title }}</h2>
+              <p class="message-body">{{ item.body }}</p>
+              <div class="message-card-footer">
+                {% if item.link %}
+                  <a class="message-action" href="{{ item.link }}">Open chat</a>
+                {% else %}
+                  <span class="message-muted">No linked page</span>
+                {% endif %}
+              </div>
+            </article>
+          {% empty %}
+            <div class="message-empty"><p>No appointment updates yet.</p></div>
+          {% endfor %}
+        </div>
+      </section>
+    {% elif active_tab == "private" %}
+      <section class="message-pane is-active">
+        <div class="comments-header">
+          <h3>Private chat</h3>
+        </div>
+        <div class="message-thread-list">
+          {% for thread in private_threads %}
+            <a class="message-thread-card" href="{% url 'thread_detail' thread.pk %}">
+              <div>
+                <strong>{{ thread.title|default:"Private chat" }}</strong>
+                <p class="message-thread-meta">Direct conversation</p>
+              </div>
+              <span>{{ thread.updated_at|date:"M j, Y g:i A" }}</span>
+            </a>
+          {% empty %}
+            <div class="message-empty"><p>No private chats yet.</p></div>
+          {% endfor %}
+        </div>
+        <div class="message-list">
+          {% for item in private_items %}
+            <article class="message-card message-private">
+              <div class="message-card-top">
+                <span class="message-category">Private message</span>
+                <span class="message-time">{{ item.created_at|date:"M j, Y" }}</span>
+              </div>
+              <h2 class="message-title">{{ item.title }}</h2>
+              <p class="message-body">{{ item.body }}</p>
+              <div class="message-card-footer">
+                {% if item.link %}
+                  <a class="message-action" href="{{ item.link }}">Open chat</a>
+                {% else %}
+                  <span class="message-muted">No linked page</span>
+                {% endif %}
+              </div>
+            </article>
+          {% empty %}
+            <div class="message-empty"><p>No unread private notices yet.</p></div>
+          {% endfor %}
+        </div>
+      </section>
+    {% else %}
+      <section class="message-pane is-active">
+        <div class="comments-header">
+          <h3>Post comments</h3>
+        </div>
+        <div class="message-list">
+          {% for item in comment_items %}
+            <article class="message-card message-review">
+              <div class="message-card-top">
+                <span class="message-category">Post comment</span>
+                <span class="message-time">{{ item.created_at|date:"M j, Y" }}</span>
+              </div>
+              <h2 class="message-title">{{ item.title }}</h2>
+              <p class="message-body">{{ item.body }}</p>
+              <div class="message-card-footer">
+                {% if item.link %}
+                  <a class="message-action" href="{{ item.link }}">Open post</a>
+                {% else %}
+                  <span class="message-muted">No linked page</span>
+                {% endif %}
+              </div>
+            </article>
+          {% empty %}
+            <div class="message-empty"><p>No post comments yet.</p></div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

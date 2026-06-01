@@ -1,0 +1,40 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Work Notes{% endblock %}
+{% block content %}
+<main class="profile-page">
+  <section class="schedule-section" aria-labelledby="work-title">
+    <div class="section-title-row">
+      <div>
+        <p class="eyebrow">Schedule box</p>
+        <h2 id="work-title">Work notes</h2>
+      </div>
+      <form class="booking-form" method="get">
+        <input type="date" name="date" value="{{ selected }}">
+        <button class="booking-submit" type="submit">View date</button>
+      </form>
+    </div>
+
+    <div class="comments-panel">
+      <div class="comments-header"><h3>{{ selected }}</h3></div>
+      <div class="comment-list">
+        {% for job in jobs %}
+          <article class="comment-item">
+            <div class="comment-content">
+              <p class="comment-author">{{ job.client.profile.display_name|default:job.client.username }} <span>{{ job.expected_finish_time }}</span></p>
+              <p>{{ job.portfolio.style }} · {{ job.notes|default:"No notes" }}</p>
+              <p>{{ job.address }}</p>
+            </div>
+          </article>
+        {% empty %}
+          <div class="comment-login-prompt"><p>No confirmed jobs on this date.</p></div>
+        {% endfor %}
+        {% for item in occupied %}
+          <article class="comment-item">
+            <div class="comment-content"><p>{{ item.start_time }}-{{ item.end_time }} · {{ item.note }}</p></div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

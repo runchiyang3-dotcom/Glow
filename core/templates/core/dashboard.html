@@ -1,0 +1,408 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Dashboard{% endblock %}
+{% block content %}
+<main class="profile-page dashboard-page">
+  <section class="profile-hero" aria-labelledby="dashboard-title">
+    <article class="profile-intro dashboard-profile-card">
+      <img class="profile-avatar" src="{% if profile.avatar %}{{ profile.avatar.url }}{% else %}{{ profile.avatar_url|default:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=420&q=80' }}{% endif %}" alt="{{ profile.display_name }} avatar">
+      <div>
+        <div class="dashboard-profile-head">
+          <div>
+            <p class="profile-kicker">{{ active_login_role_label }} dashboard</p>
+            <h1 id="dashboard-title">{{ profile.display_name|default:user.username }}</h1>
+          </div>
+          <a class="contact-button" href="{% url 'edit_profile' %}">Edit profile</a>
+        </div>
+        <p class="profile-id">{{ profile.city|default:"City not set" }}</p>
+        <p class="profile-id">{{ profile.address|default:"Address not set" }}</p>
+        <p class="profile-bio">{{ profile.bio|default:"Manage your makeup bookings and profile information." }}</p>
+        <div class="post-artist-meta">
+          <span>{{ appointments|length }} active records</span>
+          {% if profile.is_artist %}
+            <span>{% if profile.payment_enabled %}Payments enabled{% else %}Soft artist mode{% endif %}</span>
+            {% if profile.artist_price_range %}<span>{{ profile.artist_price_range }}</span>{% endif %}
+            {% if profile.social_media %}<span>{{ profile.social_media }}</span>{% endif %}
+            <a class="contact-button" href="{% url 'portfolio_create' %}">Create</a>
+            <a class="contact-button" href="{% url 'schedule' %}">Edit details</a>
+          {% else %}
+            <span>Client workspace</span>
+          {% endif %}
+        </div>
+      </div>
+    </article>
+  </section>
+
+  {% if profile.is_artist %}
+    {% if not payment_enabled %}
+      <section class="portfolio-section dashboard-banner dashboard-soft-banner">
+        <div class="dashboard-banner-copy">
+          <p class="eyebrow">Artist mode</p>
+          <h2>Soft artist dashboard</h2>
+          <p>
+            Your dashboard now shows personal info and portfolio management. Publish at least one portfolio,
+            then enable payments to unlock private schedule management and full booking operations.
+          </p>
+        </div>
+        <div class="dashboard-banner-actions">
+          <a class="contact-button" href="{% url 'portfolio_create' %}">Create portfolio</a>
+          {% if can_enable_payments %}
+            <form method="post" action="{% url 'enable_payments' %}">
+              {% csrf_token %}
+              <button type="submit" class="contact-button secondary-action">Enable payments</button>
+            </form>
+          {% else %}
+            <p class="dashboard-muted-note">Enable payments becomes available after your first portfolio is published.</p>
+          {% endif %}
+        </div>
+      </section>
+    {% else %}
+      <section class="portfolio-section dashboard-banner dashboard-live-banner">
+        <div class="dashboard-banner-copy">
+          <p class="eyebrow">Artist mode</p>
+          <h2>Payments enabled</h2>
+          <p>
+            This dashboard is now split into your personal profile, portfolio management, and private schedule with
+            same-day booking visibility.
+          </p>
+        </div>
+        <div class="dashboard-stat-grid">
+          <article class="dashboard-stat-card">
+            <span>Bookable</span>
+            <strong>{{ bookable_posts|length }}</strong>
+          </article>
+          <article class="dashboard-stat-card">
+            <span>Non-bookable</span>
+            <strong>{{ non_bookable_posts|length }}</strong>
+          </article>
+          <article class="dashboard-stat-card">
+            <span>Selected day jobs</span>
+            <strong>{{ artist_day_appointments|length }}</strong>
+          </article>
+        </div>
+      </section>
+    {% endif %}
+  {% endif %}
+
+  <section class="portfolio-section">
+    <div class="section-title-row">
+      <div>
+        <p class="eyebrow">Appointments</p>
+        <h2>{% if profile.is_artist %}Current orders{% else %}Booking schedule{% endif %}</h2>
+      </div>
+    </div>
+    <div class="dashboard-appointment-list">
+      {% for appointment in appointments %}
+        <article
+          class="dashboard-appointment-card appointment-summary-card"
+          data-appointment-card
+          data-title="{{ appointment.portfolio.title }}"
+          data-role="{% if user == appointment.artist %}Client{% else %}Makeup artist{% endif %}"
+          data-person="{% if user == appointment.artist %}{{ appointment.client.profile.display_name|default:appointment.client.username }}{% else %}{{ appointment.artist.profile.display_name|default:appointment.artist.username }}{% endif %}"
+          data-person-id="{% if user == appointment.artist %}@{{ appointment.client.username }}{% else %}@{{ appointment.artist.username }}{% endif %}"
+          data-status="{{ appointment.get_status_display }}"
+          data-date="{{ appointment.appointment_date|date:'M j, Y' }}"
+          data-time="{{ appointment.expected_finish_time|time:'g:i A' }}"
+          data-address="{{ appointment.address }}"
+          data-full-price="AUD {{ appointment.full_price }}"
+          data-deposit="AUD {{ appointment.deposit_amount }}"
+          data-final="AUD {{ appointment.final_amount }}"
+          data-created="{{ appointment.created_at|date:'M j, Y, g:i A' }}"
+          data-notes="{{ appointment.notes|default:'No notes' }}"
+          data-step="{{ appointment.status }}"
+          data-avatar="{% if user == appointment.artist %}{% if appointment.client.profile.avatar %}{{ appointment.client.profile.avatar.url }}{% else %}{{ appointment.client.profile.avatar_url|default:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80' }}{% endif %}{% else %}{% if appointment.artist.profile.avatar %}{{ appointment.artist.profile.avatar.url }}{% else %}{{ appointment.artist.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80' }}{% endif %}{% endif %}"
+          tabindex="0"
+        >
+          <div class="appointment-card-head">
+            <div class="appointment-title-group">
+              <div class="appointment-person">
+                {% if user == appointment.artist %}
+                  <img src="{% if appointment.client.profile.avatar %}{{ appointment.client.profile.avatar.url }}{% else %}{{ appointment.client.profile.avatar_url|default:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80' }}{% endif %}" alt="{{ appointment.client.profile.display_name|default:appointment.client.username }} avatar">
+                  <div>
+                    <span>Client</span>
+                    <strong>{{ appointment.client.profile.display_name|default:appointment.client.username }}</strong>
+                    <small>@{{ appointment.client.username }}</small>
+                  </div>
+                {% else %}
+                  <img src="{% if appointment.artist.profile.avatar %}{{ appointment.artist.profile.avatar.url }}{% else %}{{ appointment.artist.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80' }}{% endif %}" alt="{{ appointment.artist.profile.display_name|default:appointment.artist.username }} avatar">
+                  <div>
+                    <span>Makeup artist</span>
+                    <strong>{{ appointment.artist.profile.display_name|default:appointment.artist.username }}</strong>
+                    <small>@{{ appointment.artist.username }}</small>
+                  </div>
+                {% endif %}
+              </div>
+              <p class="appointment-summary-date">{{ appointment.appointment_date|date:"M j, Y" }}</p>
+            </div>
+          </div>
+
+          <div class="appointment-actions">
+            {% if user == appointment.artist and appointment.status == "pending" %}
+              <form method="post" action="{% url 'accept_appointment' appointment.pk %}">{% csrf_token %}<button type="submit">Accept</button></form>
+            {% endif %}
+            {% if user == appointment.client and appointment.status == "accepted" %}
+              <form method="post" action="{% url 'pay_deposit' appointment.pk %}">{% csrf_token %}<button type="submit">Pay deposit</button></form>
+            {% endif %}
+            {% if user == appointment.artist and appointment.status == "deposit_paid" %}
+              <form method="post" action="{% url 'mark_completed' appointment.pk %}">{% csrf_token %}<button type="submit">Mark completed</button></form>
+            {% endif %}
+            {% if user == appointment.client and appointment.status == "completed" %}
+              <form method="post" action="{% url 'pay_final' appointment.pk %}">{% csrf_token %}<button type="submit">Pay final</button></form>
+            {% endif %}
+          </div>
+        </article>
+      {% empty %}
+        <div class="comment-login-prompt"><p>No appointments yet.</p></div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if profile.is_artist and profile.payment_enabled %}
+    <section class="schedule-section dashboard-schedule-section" aria-labelledby="dashboard-schedule-title">
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Private schedule</p>
+          <h2 id="dashboard-schedule-title">Schedule and day orders</h2>
+        </div>
+        <a class="contact-button" href="{% url 'schedule' %}">Edit details</a>
+      </div>
+      <div class="schedule-layout dashboard-schedule-layout">
+        <div class="schedule-week profile-timetable">
+          <div class="schedule-legend" aria-label="Availability legend">
+            <span class="legend-pill available">Available</span>
+            <span class="legend-pill booked">Booked</span>
+            <span class="legend-pill unavailable">Unavailable</span>
+          </div>
+          <div class="timetable profile-calendar" aria-label="Artist private schedule calendar">
+            <div class="timetable-header">
+              <button class="month-button" type="button" data-profile-month="prev" aria-label="Previous month">&lsaquo;</button>
+              <div>
+                <p class="calendar-kicker">Private timetable</p>
+                <h3 id="profileCalendarMonth">Month Year</h3>
+              </div>
+              <button class="month-button" type="button" data-profile-month="next" aria-label="Next month">&rsaquo;</button>
+            </div>
+            <div class="weekday-row" aria-hidden="true">
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+              <span>Sun</span>
+            </div>
+            <div
+              class="calendar-grid"
+              id="profileCalendarGrid"
+              data-profile-mode="dashboard"
+              data-profile-selected-url="{% url 'dashboard' %}"
+              data-availability-weekdays='{{ availability_weekdays_json|safe }}'
+              data-booked-dates='{{ booked_dates_json|safe }}'
+              data-occupied-dates='{{ occupied_dates_json|safe }}'
+              data-selected-date="{{ selected_date_raw }}"
+            ></div>
+            <p class="date-note" id="profileDateNote">Selected date: {{ selected_date|date:"D, j M Y" }}. Click a day to review that date.</p>
+          </div>
+        </div>
+
+        <aside class="booking-panel dashboard-day-panel">
+          <h3>{{ selected_date|date:"D, j M Y" }}</h3>
+          <p class="booking-note">
+            The left timetable mirrors your private schedule view. Pick a date to review current orders,
+            then use Edit details to change available hours, mark a day unavailable, or block a longer leave period.
+          </p>
+          <div class="dashboard-day-tags">
+            <span class="legend-pill">Weekly windows: {{ availability_windows|length }}</span>
+            <span class="legend-pill">Orders: {{ artist_day_appointments|length }}</span>
+            <span class="legend-pill">Blocks: {{ artist_day_occupied|length }}</span>
+          </div>
+          <form class="booking-form dashboard-date-form" method="get" action="{% url 'dashboard' %}">
+            <label>
+              Review another date
+              <input type="date" name="date" value="{{ selected_date_raw }}">
+            </label>
+            <button class="booking-submit" type="submit">View date</button>
+          </form>
+          <div class="dashboard-day-list">
+            <h4>Current orders</h4>
+            {% for job in artist_day_appointments %}
+              <article class="dashboard-day-order">
+                <div>
+                  <strong>{{ job.client.profile.display_name|default:job.client.username }}</strong>
+                  <span>@{{ job.client.username }}</span>
+                </div>
+                <p>{{ job.appointment_date|date:"j M Y" }} · finish by {{ job.expected_finish_time|time:"g:i A" }}</p>
+                <p>{{ job.portfolio.title }} · AUD {{ job.full_price }}</p>
+              </article>
+            {% empty %}
+              <p class="dashboard-muted-note">No confirmed orders on this date.</p>
+            {% endfor %}
+          </div>
+          <div class="dashboard-day-list">
+            <h4>Blocked or unavailable notes</h4>
+            {% for item in artist_day_occupied %}
+              <article class="dashboard-day-order">
+                <div>
+                  <strong>{{ item.start_time|time:"g:i A" }} - {{ item.end_time|time:"g:i A" }}</strong>
+                </div>
+                <p>{{ item.note|default:"Manual unavailable block" }}</p>
+              </article>
+            {% empty %}
+              <p class="dashboard-muted-note">No manual blocks saved for this date.</p>
+            {% endfor %}
+          </div>
+          <div class="dashboard-schedule-rules">
+            <p>1. Use manual blocks when a selected day should become unavailable.</p>
+            <p>2. Weekly windows define which weekdays stay available by default.</p>
+            <p>3. Longer leave ranges can be managed from the schedule editor.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  {% endif %}
+
+  <div class="appointment-modal-overlay" data-appointment-modal hidden>
+    <button class="appointment-modal-backdrop" type="button" data-appointment-close aria-label="Close booking details"></button>
+    <article class="appointment-modal" role="dialog" aria-modal="true" aria-labelledby="appointmentModalTitle">
+      <button class="appointment-modal-close" type="button" data-appointment-close aria-label="Close booking details">Close</button>
+      <div class="appointment-modal-person">
+        <img data-appointment-avatar src="" alt="">
+        <div>
+          <p data-appointment-role></p>
+          <h3 data-appointment-person></h3>
+          <span data-appointment-person-id></span>
+        </div>
+      </div>
+      <h4 id="appointmentModalTitle" data-appointment-title></h4>
+      <dl class="appointment-modal-grid">
+        <div><dt>Appointment time</dt><dd data-appointment-time></dd></div>
+        <div><dt>Status</dt><dd data-appointment-status></dd></div>
+        <div><dt>Full price</dt><dd data-appointment-full-price></dd></div>
+        <div><dt>Deposit</dt><dd data-appointment-deposit></dd></div>
+        <div><dt>Final</dt><dd data-appointment-final></dd></div>
+        <div><dt>Ordered at</dt><dd data-appointment-created></dd></div>
+        <div class="appointment-modal-wide"><dt>Address</dt><dd data-appointment-address></dd></div>
+        <div class="appointment-modal-wide"><dt>Notes</dt><dd data-appointment-notes></dd></div>
+      </dl>
+      <ol class="appointment-process-list" data-appointment-process>
+        <li data-process-step="pending">Application</li>
+        <li data-process-step="accepted">Artist approved</li>
+        <li data-process-step="deposit_paid">Deposit paid</li>
+        <li data-process-step="completed">Makeup day</li>
+        <li data-process-step="final_paid">Final paid</li>
+      </ol>
+    </article>
+  </div>
+
+  <section class="portfolio-section">
+    <div class="section-title-row">
+      <div>
+        <p class="eyebrow">{% if profile.is_artist %}Portfolio{% else %}Posts record{% endif %}</p>
+        <h2>{% if profile.is_artist %}Portfolio{% else %}Your posts{% endif %}</h2>
+      </div>
+      {% if profile.is_artist %}
+        <a class="contact-button" href="{% url 'portfolio_create' %}">Create</a>
+      {% endif %}
+    </div>
+
+    {% if profile.is_artist %}
+      <div class="dashboard-post-shelf">
+        <div class="dashboard-post-group">
+          <div class="dashboard-post-group-head">
+            <h3>Bookable</h3>
+            <span>{{ bookable_posts|length }} posts</span>
+          </div>
+          <div class="masonry-grid community-feed portfolio-post-grid">
+            {% for post in bookable_posts %}
+              <article class="work-card {{ post.card_size }}" data-bookable="true" data-post-href="{% url 'portfolio_detail' post.pk %}" tabindex="0">
+                <div class="work-media">{% if post.display_image_url %}<img src="{{ post.display_image_url }}" alt="{{ post.title }}">{% endif %}</div>
+                <div class="work-content">
+                  <div class="price-row">
+                    <span class="post-type bookable-type">Bookable</span>
+                    <strong>AUD {{ post.full_price }}</strong>
+                  </div>
+                  <h3>{{ post.title }}</h3>
+                  <p class="post-body">{{ post.description }}</p>
+                  <div class="post-details" aria-label="Post details">
+                    <span>{{ post.city }}</span>
+                    <span>{{ post.style }}</span>
+                    <span>{{ post.availability_label }}</span>
+                  </div>
+                  <div class="dashboard-post-actions">
+                    <a class="contact-button" href="{% url 'portfolio_edit' post.pk %}">Edit</a>
+                    <form method="post" action="{% url 'toggle_portfolio_booking' post.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="contact-button secondary-action">Remove bookable</button>
+                    </form>
+                  </div>
+                </div>
+              </article>
+            {% empty %}
+              <div class="comment-login-prompt"><p>No bookable portfolio yet.</p></div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="dashboard-post-group">
+          <div class="dashboard-post-group-head">
+            <h3>Non-bookable</h3>
+            <span>{{ non_bookable_posts|length }} posts</span>
+          </div>
+          <div class="masonry-grid community-feed portfolio-post-grid">
+            {% for post in non_bookable_posts %}
+              <article class="work-card {{ post.card_size }}" data-bookable="false" data-post-href="{% url 'post_detail' post.pk %}" tabindex="0">
+                <div class="work-media">{% if post.display_image_url %}<img src="{{ post.display_image_url }}" alt="{{ post.title }}">{% endif %}</div>
+                <div class="work-content">
+                  <div class="price-row">
+                    <span class="post-type tip-type">Non-bookable</span>
+                    <strong>{{ post.price_label|default:post.price_range|default:"Portfolio post" }}</strong>
+                  </div>
+                  <h3>{{ post.title }}</h3>
+                  <p class="post-body">{{ post.description }}</p>
+                  <div class="post-details" aria-label="Post details">
+                    <span>{{ post.city }}</span>
+                    <span>{{ post.style }}</span>
+                    <span>{{ post.availability_label }}</span>
+                  </div>
+                  <div class="dashboard-post-actions">
+                    <a class="contact-button" href="{% url 'portfolio_edit' post.pk %}">Edit</a>
+                    <form method="post" action="{% url 'toggle_portfolio_booking' post.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="contact-button secondary-action">Set bookable</button>
+                    </form>
+                  </div>
+                </div>
+              </article>
+            {% empty %}
+              <div class="comment-login-prompt"><p>No non-bookable portfolio yet.</p></div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="masonry-grid community-feed portfolio-post-grid">
+        {% for post in user_posts %}
+          <article class="work-card {{ post.card_size }}" data-bookable="{{ post.is_bookable|yesno:'true,false' }}" data-post-href="{% if post.is_bookable %}{% url 'portfolio_detail' post.pk %}{% else %}{% url 'post_detail' post.pk %}{% endif %}" tabindex="0">
+            <div class="work-media">{% if post.display_image_url %}<img src="{{ post.display_image_url }}" alt="{{ post.title }}">{% endif %}</div>
+            <div class="work-content">
+              <div class="price-row">
+                {% if post.is_bookable %}<span class="post-type bookable-type">Bookable</span>{% endif %}
+                <strong>{{ post.display_price_text }}</strong>
+              </div>
+              <h3>{{ post.title }}</h3>
+              <p class="post-body">{{ post.description }}</p>
+              <div class="post-details" aria-label="Post details">
+                <span>{{ post.city }}</span>
+                <span>{{ post.style }}</span>
+                <span>{{ post.availability_label }}</span>
+              </div>
+              <p class="sender-row"><span>{{ post.created_at|timesince }} ago</span><span>{{ post.views }} views</span></p>
+            </div>
+          </article>
+        {% empty %}
+          <div class="comment-login-prompt"><p>No posts yet.</p></div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}

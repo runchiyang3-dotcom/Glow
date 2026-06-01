@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Edit Profile{% endblock %}
+{% block content %}
+<main class="auth-page">
+  <section class="auth-panel compact-auth-panel" aria-labelledby="edit-title">
+    <div class="auth-copy">
+      <p class="eyebrow">Dashboard</p>
+      <h1 id="edit-title">Edit personal information</h1>
+      <p>Update your profile information shown across Glow AU.</p>
+    </div>
+    <form class="auth-form" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% include "core/form_panel.html" %}
+      <button class="google-auth-button" type="submit">Save profile</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Request Booking{% endblock %}
+{% block content %}
+<main class="auth-page">
+  <section class="auth-panel" aria-labelledby="booking-title">
+    <div class="auth-copy">
+      <p class="eyebrow">{{ portfolio.artist.profile.display_name|default:portfolio.artist.username }}</p>
+      <h1 id="booking-title">Request {{ portfolio.title }}</h1>
+      <p>The artist will approve first. Then you pay one-quarter deposit. The remaining three-quarters are paid after completion.</p>
+    </div>
+    <form class="auth-form" method="post">
+      {% csrf_token %}
+      {% include "core/form_panel.html" %}
+      <button class="google-auth-button" type="submit">Send booking request</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

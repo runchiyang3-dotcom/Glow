@@ -1,0 +1,113 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | {% if is_onboarding %}Artist Registration{% else %}Upload Portfolio{% endif %}{% endblock %}
+{% block content %}
+<main class="auth-page{% if is_onboarding %} artist-registration-page{% endif %}">
+  <section class="auth-panel{% if is_onboarding %} artist-registration-panel{% endif %}" aria-labelledby="portfolio-title">
+    {% if is_onboarding %}
+      <div class="auth-copy artist-registration-copy">
+        <p class="eyebrow">Artist registration</p>
+        <h1 id="portfolio-title">Register as a makeup artist</h1>
+        <p>Choose your service city anywhere in Australia, set your price range with two numbers, add style tags one by one, and link the platform clients should use first.</p>
+      </div>
+
+      <form class="auth-form artist-registration-form" method="post" novalidate data-artist-registration-form>
+        {% csrf_token %}
+        <input type="hidden" name="location" value="{{ form.location.value|default:'' }}" data-registration-location>
+        <input type="hidden" name="location_city" value="{{ form.location_city.value|default:'' }}" data-registration-city>
+        <input type="hidden" name="style_tags" value="{{ form.style_tags.value|default:'' }}" data-registration-tags>
+
+        {% if form.non_field_errors %}
+          <div class="registration-errors" aria-label="Form errors">
+            {% for error in form.non_field_errors %}<p class="error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="artist-registration-grid">
+          <label class="registration-field registration-field-wide">
+            <span>Service city</span>
+            <input
+              type="text"
+              name="location_query"
+              value="{{ form.location_query.value|default:'' }}"
+              placeholder="Start typing an Australian city"
+              autocomplete="off"
+              data-registration-address-input
+              aria-describedby="registrationAddressHelp"
+            >
+            <small id="registrationAddressHelp">Pick a city from the suggestions. Search is restricted to Australia.</small>
+            <div class="address-suggestions" data-registration-address-suggestions hidden></div>
+            {% for error in form.location_query.errors %}<small class="error">{{ error }}</small>{% endfor %}
+            {% for error in form.location.errors %}<small class="error">{{ error }}</small>{% endfor %}
+          </label>
+
+          <fieldset class="registration-field registration-price-field">
+            <legend>Price range</legend>
+            <div class="price-range-grid">
+              <label>
+                <span>Low</span>
+                <input type="number" min="0" step="0.01" name="price_low" value="{{ form.price_low.value|default:'' }}" placeholder="180.00">
+              </label>
+              <label>
+                <span>High</span>
+                <input type="number" min="0" step="0.01" name="price_high" value="{{ form.price_high.value|default:'' }}" placeholder="320.00">
+              </label>
+            </div>
+            <small>Enter the lowest and highest price you charge for this service.</small>
+            {% for error in form.price_low.errors %}<small class="error">{{ error }}</small>{% endfor %}
+            {% for error in form.price_high.errors %}<small class="error">{{ error }}</small>{% endfor %}
+          </fieldset>
+
+          <fieldset class="registration-field registration-field-wide registration-tags">
+            <legend>Style tags</legend>
+            <p>Type a tag and press plus, or choose from the suggestions.</p>
+            <div class="tag-entry-row" data-registration-tag-composer>
+              <input type="text" placeholder="Clean beauty, bridal glow, soft glam" autocomplete="off" data-registration-tag-input>
+              <button type="button" class="tag-add-button" data-registration-tag-add aria-label="Add style tag">+</button>
+            </div>
+            <div class="tag-suggestions" data-registration-tag-suggestions hidden></div>
+            <div class="tag-chip-list" data-registration-tag-list></div>
+            {% for error in form.style_tags.errors %}<small class="error">{{ error }}</small>{% endfor %}
+          </fieldset>
+
+          <label class="registration-field">
+            <span>Social platform</span>
+            <select name="social_platform">
+              {% for value, label in form.fields.social_platform.choices %}
+                <option value="{{ value }}"{% if form.social_platform.value == value %} selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <small>Optional. Choose the first platform clients should contact.</small>
+            {% for error in form.social_platform.errors %}<small class="error">{{ error }}</small>{% endfor %}
+          </label>
+
+          <label class="registration-field">
+            <span>Social handle or link</span>
+            <input type="text" name="social_handle" value="{{ form.social_handle.value|default:'' }}" placeholder="@yourname or a portfolio URL">
+            <small>Optional. Use a handle, website, or booking link.</small>
+            {% for error in form.social_handle.errors %}<small class="error">{{ error }}</small>{% endfor %}
+          </label>
+        </div>
+
+        <button class="google-auth-button" type="submit">Save registration</button>
+      </form>
+    {% else %}
+      <div class="auth-copy">
+        <p class="eyebrow">Artist portfolio</p>
+        <h1 id="portfolio-title">Upload a bookable portfolio</h1>
+        <p>Add another portfolio. Mark it bookable when you want it to appear with a booking timetable.</p>
+      </div>
+      <form class="auth-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% include "core/form_panel.html" %}
+        <button class="google-auth-button" type="submit">Save portfolio</button>
+      </form>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+  {% if is_onboarding and google_maps_api_key %}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initArtistRegistrationAutocomplete" async defer></script>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | {{ artist.profile.display_name }}{% endblock %}
+{% block content %}
+<main class="profile-page">
+  <section class="profile-hero" aria-labelledby="profile-name">
+    <article class="profile-intro">
+      <img class="profile-avatar" src="{% if artist.profile.avatar %}{{ artist.profile.avatar.url }}{% else %}{{ artist.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=420&q=80' }}{% endif %}" alt="{{ artist.profile.display_name }} portrait">
+      <div>
+        <p class="profile-kicker">{% if artist.profile.is_artist %}Makeup artist profile{% else %}Client profile{% endif %}</p>
+        <h1 id="profile-name">{{ artist.profile.display_name|default:artist.username }}</h1>
+        <p class="profile-id">@{{ artist.username }}</p>
+        <p class="profile-id">{{ artist.profile.city|default:"City not set" }}</p>
+        <p class="profile-id">{{ artist.profile.address|default:"Address not set" }}</p>
+        <p class="profile-bio">{{ artist.profile.bio|default:"Glow AU community member." }}</p>
+        {% if can_message %}
+          <form method="post" action="{% url 'start_private_thread' artist.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="contact-button">Send message</button>
+          </form>
+        {% endif %}
+      </div>
+    </article>
+  </section>
+
+  <section class="portfolio-section" aria-labelledby="portfolio-title">
+    <div class="section-title-row">
+      <div>
+        <p class="eyebrow">Portfolio</p>
+        <h2 id="portfolio-title">{% if artist.profile.is_artist %}Portfolio posts{% else %}Community posts{% endif %}</h2>
+      </div>
+    </div>
+
+    <div class="masonry-grid community-feed portfolio-post-grid" aria-label="Portfolio highlights">
+      {% for post in portfolios %}
+        <article class="work-card {{ post.card_size }}" data-profile-post data-page="1" data-bookable="{{ post.is_bookable|yesno:'true,false' }}" data-post-href="{% if post.is_bookable %}{% url 'portfolio_detail' post.pk %}{% else %}{% url 'post_detail' post.pk %}{% endif %}" tabindex="0" aria-label="Open post: {{ post.title }}">
+          <div class="work-media">
+            {% if post.display_image_url %}<img src="{{ post.display_image_url }}" alt="{{ post.title }}">{% endif %}
+            <a class="post-stamp" href="{% url 'portfolio_detail' post.pk %}" aria-label="{{ artist.profile.display_name }} portfolio detail">
+              <img class="stamp-avatar" src="{% if artist.profile.avatar %}{{ artist.profile.avatar.url }}{% else %}{{ artist.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80' }}{% endif %}" alt="{{ artist.profile.display_name }} avatar">
+              <span class="stamp-id">@{{ artist.username }}</span>
+            </a>
+          </div>
+          <div class="work-content">
+            <div class="price-row">
+              {% if post.is_bookable %}<span class="post-type bookable-type">Bookable</span>{% endif %}
+              <strong>{{ post.display_price_text }}</strong>
+            </div>
+            <h3>{{ post.title }}</h3>
+            <p class="post-body">{{ post.description }}</p>
+            <div class="post-details" aria-label="Post details">
+              <span>{{ artist.profile.display_name }}</span>
+              <span>{{ post.city }}</span>
+              <span>{{ post.style }}</span>
+              <span>{{ post.availability_label }}</span>
+            </div>
+            <p class="sender-row"><span>{{ post.created_at|timesince }} ago</span><span>{{ post.views }} views</span></p>
+          </div>
+        </article>
+      {% empty %}
+        <p class="community-invite">No posts yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if artist.profile.is_artist %}
+    <section class="schedule-section" aria-labelledby="schedule-title">
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Booking</p>
+          <h2 id="schedule-title">Schedule</h2>
+        </div>
+      </div>
+
+      <div class="schedule-layout">
+        <div class="schedule-week profile-timetable">
+          <div class="schedule-legend" aria-label="Availability legend">
+            <span class="legend-pill available">Available</span>
+            <span class="legend-pill booked">Booked</span>
+            <span class="legend-pill unavailable">Unavailable</span>
+          </div>
+          <div class="timetable profile-calendar" aria-label="Artist availability calendar">
+            <div class="timetable-header">
+              <button class="month-button" type="button" data-profile-month="prev" aria-label="Previous month">&lsaquo;</button>
+              <div>
+                <p class="calendar-kicker">Artist availability</p>
+                <h2 id="profileCalendarMonth">Month Year</h2>
+              </div>
+              <button class="month-button" type="button" data-profile-month="next" aria-label="Next month">&rsaquo;</button>
+            </div>
+            <div class="weekday-row" aria-hidden="true">
+              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+            <div class="calendar-grid profile-calendar-grid" id="profileCalendarGrid"></div>
+            <p class="date-note" id="profileDateNote">Choose a green available day to send a booking request.</p>
+          </div>
+        </div>
+
+        <aside class="booking-panel">
+          <h3>Submit booking request</h3>
+          <p class="booking-note">
+            Choose one green available day from the timetable, then enter the time you want the makeup finished.
+          </p>
+          <p class="booking-hours">
+            Business hours: Mon/Wed/Fri 10:00 AM-6:00 PM, Tue/Thu 12:00 PM-8:00 PM, Sat 9:00 AM-4:00 PM, Sun closed.
+          </p>
+          <p class="booking-summary">Selected date: <span id="selectedSlotLabel">No date selected yet.</span></p>
+          {% if user.is_authenticated and user != artist and bookable_portfolio %}
+            <form class="booking-form" id="bookingForm" method="post" action="{% url 'request_appointment' bookable_portfolio.pk %}">
+              {% csrf_token %}
+              <label>
+                Selected date
+                <input name="appointment_date" id="bookingDate" type="date" required>
+              </label>
+              <label>
+                Desired makeup finish time
+                <input name="expected_finish_time" id="bookingTime" type="time" required>
+              </label>
+              <label>
+                Address
+                <input name="address" type="text" value="{{ user.profile.address }}" required>
+              </label>
+              <label>
+                Booking notes
+                <textarea name="notes" placeholder="Tell the artist about your event, look reference and location."></textarea>
+              </label>
+              <button class="booking-submit" type="submit">Send booking request</button>
+            </form>
+          {% elif not user.is_authenticated %}
+            <p class="booking-login-note">Please log in to submit a booking request.</p>
+            <a class="contact-button" href="{% url 'login' %}">Log in</a>
+          {% elif user == artist %}
+            <p class="booking-login-note">You cannot book your own profile.</p>
+          {% else %}
+            <p class="booking-login-note">This artist does not have a bookable post yet.</p>
+          {% endif %}
+          <p class="booking-status" id="bookingStatus" aria-live="polite"></p>
+        </aside>
+      </div>
+    </section>
+  {% else %}
+    <section class="schedule-section" aria-labelledby="profile-details-title">
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Profile</p>
+          <h2 id="profile-details-title">Details</h2>
+        </div>
+      </div>
+      <aside class="booking-panel">
+        <h3>{{ artist.profile.display_name|default:artist.username }}</h3>
+        <p class="booking-note">{{ artist.profile.bio|default:"Community member looking for clean beauty inspiration and artist recommendations." }}</p>
+        <p class="booking-hours">{{ artist.profile.city|default:"City not set" }}</p>
+        <p class="booking-hours">{{ artist.profile.address|default:"Address not set" }}</p>
+      </aside>
+    </section>
+  {% endif %}
+</main>
+{% endblock %}

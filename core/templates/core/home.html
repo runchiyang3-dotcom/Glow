@@ -1,0 +1,93 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | Makeup Lovers, Artists and Creative Looks{% endblock %}
+{% block content %}
+<main>
+  <section class="hero-section" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow">A beauty community for artists and enthusiasts</p>
+      <h1 id="hero-title">Find makeup for every look.</h1>
+      <p class="hero-description">
+        Glow AU connects makeup artists, beauty enthusiasts and creative clients across
+        Australia. Explore bookable artists, share everyday looks, and discover clean,
+        polished skin-first makeup for weddings, events and daily beauty.
+      </p>
+
+      <div class="intent-panel" aria-label="Makeup booking intent">
+        <div class="intent-field">
+          <span>Find your makeup artist by location, date and style</span>
+          <div class="intent-search-row">
+            <div class="intent-search">
+              <input type="text" placeholder="Enter the artist or style you want to find" aria-label="Makeup style, culture, or makeup artist name">
+              <button type="button" aria-label="Search"><span class="search-icon" aria-hidden="true"></span></button>
+            </div>
+            <label class="city-field">
+              <span>City</span>
+              <input id="cityInput" type="text" placeholder="Type or choose city" aria-label="Choose or type an Australian city" autocomplete="off" aria-expanded="false" aria-controls="citySuggestions">
+              <div class="city-suggestions" id="citySuggestions" role="listbox" aria-label="Australian city suggestions"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="timetable" aria-label="Possible makeup dates">
+          <div class="timetable-header">
+            <button class="month-button" type="button" data-month="prev" aria-label="Previous month">&lsaquo;</button>
+            <div>
+              <p class="calendar-kicker">Optional date preference</p>
+              <h2 id="calendarMonth">Month Year</h2>
+            </div>
+            <button class="month-button" type="button" data-month="next" aria-label="Next month">&rsaquo;</button>
+          </div>
+          <div class="weekday-row" aria-hidden="true">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <p class="date-note" id="dateNote">Select one or more possible dates, or type a date above.</p>
+          <label class="date-input-row" for="manualDateInput">
+            <span>Type date</span>
+            <input id="manualDateInput" type="date" aria-label="Type a date to jump to it">
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="community-section" id="community" aria-labelledby="community-title">
+    <div class="community-heading">
+      <div>
+        <p class="eyebrow">Community</p>
+        <h2 id="community-title">Current hot posts</h2>
+      </div>
+      {% if user.is_authenticated %}
+        <p class="community-invite">These are the current hot posts.</p>
+      {% else %}
+        <p class="community-invite">These are the current hot posts. Log in to enter the full community.</p>
+      {% endif %}
+    </div>
+
+    <div class="masonry-grid community-feed" aria-label="Community posts">
+      {% for post in posts %}
+        <article class="work-card {{ post.card_size }}" data-bookable="{{ post.is_bookable|yesno:'true,false' }}" {% if post.is_bookable %}data-post-href="{% url 'portfolio_detail' post.pk %}" tabindex="0"{% else %}data-post-href="{% url 'post_detail' post.pk %}" tabindex="0"{% endif %} aria-label="Open post: {{ post.title }}">
+          <div class="work-media">
+            {% if post.display_image_url %}<img src="{{ post.display_image_url }}" alt="{{ post.title }}">{% endif %}
+            <a class="post-stamp" href="{% url 'portfolio_detail' post.pk %}" aria-label="Open {{ post.artist.profile.display_name }} portfolio detail">
+              <img class="stamp-avatar" src="{% if post.artist.profile.avatar %}{{ post.artist.profile.avatar.url }}{% else %}{{ post.artist.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80' }}{% endif %}" alt="{{ post.artist.profile.display_name }} avatar">
+              <span class="stamp-id">@{{ post.artist.username }}</span>
+            </a>
+          </div>
+          <div class="work-content">
+            <div class="price-row">
+              {% if post.is_bookable %}<span class="post-type bookable-type">Bookable</span>{% endif %}
+              <strong>{{ post.display_price_text }}</strong>
+            </div>
+            <h3>{{ post.title }}</h3>
+            <p class="post-body">{{ post.description }}</p>
+            <p class="sender-row"><span>{{ post.created_at|timesince }} ago</span><span>{{ post.views }} views</span></p>
+          </div>
+        </article>
+      {% empty %}
+        <p class="community-invite">No community posts yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | {{ post.title }}{% endblock %}
+{% block content %}
+<main class="post-page">
+  <article class="post-detail" aria-labelledby="post-title">
+    <aside class="post-artist-card" aria-label="Publisher information">
+      <a href="{% url 'artist_profile' post.artist.pk %}" aria-label="Open {{ post.artist.profile.display_name|default:post.artist.username }} profile">
+        <img class="post-artist-avatar" src="{% if post.artist.profile.avatar %}{{ post.artist.profile.avatar.url }}{% else %}{{ post.artist.profile.avatar_url|default:'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=240&q=80' }}{% endif %}" alt="{{ post.artist.profile.display_name }} avatar">
+      </a>
+      <div>
+        <p class="profile-kicker">{% if post.artist.profile.is_artist %}Makeup artist{% else %}Community member{% endif %}</p>
+        <h1>{{ post.artist.profile.display_name|default:post.artist.username }}</h1>
+        <p class="profile-id">@{{ post.artist.username }}</p>
+        <p class="profile-bio">{{ post.artist.profile.bio|default:"Glow AU community member." }}</p>
+        <div class="post-artist-meta" aria-label="Artist details">
+          <span>{{ post.city }}</span>
+          <span>{{ post.display_address|default:"Address not set" }}</span>
+          <span>{{ post.style }}</span>
+          <span>{% if post.artist.profile.is_artist %}Professional profile{% else %}Community profile{% endif %}</span>
+        </div>
+        <a class="contact-button" href="{% url 'artist_profile' post.artist.pk %}">Contact</a>
+      </div>
+    </aside>
+
+    <section class="post-detail-main">
+      <div class="post-detail-header">
+        <div>
+          <p class="eyebrow">Community post</p>
+          <h2 id="post-title">{{ post.title }}</h2>
+        </div>
+        {% if post.is_bookable %}<span class="post-type bookable-type">Bookable</span>{% endif %}
+      </div>
+
+      <div class="post-detail-media">
+        {% if post.display_image_url %}<img src="{{ post.display_image_url }}" alt="{{ post.title }}">{% endif %}
+      </div>
+
+      <div class="post-detail-meta" aria-label="Post information">
+        <span>{{ post.created_at|timesince }} ago</span>
+        <span>{{ post.views }} views</span>
+        {% if post.display_price_text %}<span>{{ post.display_price_text }}</span>{% endif %}
+        <span>{{ post.availability_label }}</span>
+      </div>
+
+      <p class="post-detail-body">{{ post.description }}</p>
+
+      <section class="comments-panel" aria-labelledby="comments-title">
+        <div class="comments-header">
+          <h3 id="comments-title">Comments</h3>
+          <span class="message-muted">{{ comments|length }} total</span>
+        </div>
+        {% if user.is_authenticated %}
+          <form class="comment-form" method="post">
+            {% csrf_token %}
+            <img class="comment-avatar" src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}{{ user.profile.avatar_url|default:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80' }}{% endif %}" alt="{{ user.profile.display_name|default:user.username }} avatar">
+            <div class="comment-input-area">
+              <label>
+                Add comment
+                {{ comment_form.body }}
+              </label>
+              <div class="comment-actions">
+                <button type="submit">Post comment</button>
+              </div>
+            </div>
+          </form>
+        {% else %}
+          <div class="comment-login-prompt">
+            <p>Please log in to add a comment.</p>
+            <div><a href="{% url 'login' %}">Log in</a></div>
+          </div>
+        {% endif %}
+        <div class="comment-list">
+          {% for comment in comments %}
+            <article class="comment-item">
+              <img class="comment-avatar" src="{% if comment.author.profile.avatar %}{{ comment.author.profile.avatar.url }}{% else %}{{ comment.author.profile.avatar_url|default:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80' }}{% endif %}" alt="{{ comment.author.profile.display_name|default:comment.author.username }} avatar">
+              <div class="comment-content">
+                <p class="comment-author">{{ comment.author.profile.display_name|default:comment.author.username }} <span>{{ comment.created_at|date:"M j, Y g:i A" }}</span></p>
+                <p>{{ comment.body }}</p>
+              </div>
+            </article>
+          {% empty %}
+            <div class="comment-login-prompt"><p>No comments yet.</p></div>
+          {% endfor %}
+        </div>
+      </section>
+    </section>
+  </article>
+</main>
+{% endblock %}

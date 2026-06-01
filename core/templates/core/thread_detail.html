@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+{% block title %}Glow AU | {{ thread_title }}{% endblock %}
+{% block content %}
+<main class="chat-page">
+  <section class="chat-shell" aria-labelledby="thread-title">
+    <header class="chat-header">
+      <a class="chat-back" href="{% url 'messages_box' %}">Back</a>
+      <div class="chat-header-person">
+        <img
+          class="chat-header-avatar"
+          src="{% if other_user.profile.avatar %}{{ other_user.profile.avatar.url }}{% else %}{{ other_user.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80' }}{% endif %}"
+          alt="{{ other_user.profile.display_name|default:other_user.username }} avatar"
+        >
+        <div>
+          <p class="eyebrow">{% if thread.kind == "booking" %}Appointment chat{% else %}Private chat{% endif %}</p>
+          <h1 id="thread-title">{{ other_user.profile.display_name|default:other_user.username }}</h1>
+          <p class="chat-header-subtitle">{{ thread_title }}</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="chat-stream" aria-label="Chat messages">
+      {% for message in messages_in_thread %}
+        <article class="chat-row {% if message.sender == user %}is-self{% else %}is-other{% endif %}">
+          {% if message.sender != user %}
+            <img
+              class="chat-avatar"
+              src="{% if message.sender.profile.avatar %}{{ message.sender.profile.avatar.url }}{% else %}{{ message.sender.profile.avatar_url|default:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80' }}{% endif %}"
+              alt="{{ message.sender.profile.display_name|default:message.sender.username }} avatar"
+            >
+          {% endif %}
+          <div class="chat-bubble-wrap">
+            <p class="chat-meta">
+              <span>{{ message.sender.profile.display_name|default:message.sender.username }}</span>
+              <span>{{ message.created_at|date:"M j, g:i A" }}</span>
+            </p>
+            <div class="chat-bubble">
+              <p>{{ message.body }}</p>
+            </div>
+          </div>
+          {% if message.sender == user %}
+            <img
+              class="chat-avatar"
+              src="{% if user.profile.avatar %}{{ user.profile.avatar.url }}{% else %}{{ user.profile.avatar_url|default:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&q=80' }}{% endif %}"
+              alt="{{ user.profile.display_name|default:user.username }} avatar"
+            >
+          {% endif %}
+        </article>
+      {% empty %}
+        <div class="message-empty"><p>No chat messages yet.</p></div>
+      {% endfor %}
+    </section>
+
+    <form class="chat-composer" method="post">
+      {% csrf_token %}
+      <div class="chat-input-shell">
+        {{ form.body }}
+      </div>
+      <button class="chat-send" type="submit">Send</button>
+    </form>
+  </section>
+</main>
+{% endblock %}
